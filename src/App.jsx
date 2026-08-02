@@ -8,7 +8,6 @@ import {
   LogOut, 
   Plus, 
   Search, 
-  CheckCircle2, 
   Clock, 
   Car, 
   MapPin, 
@@ -23,9 +22,28 @@ export default function App() {
   const [selectedBranch, setSelectedBranch] = useState('all');
 
   const [messengers, setMessengers] = useState([
-    { id: 1, name: 'أحمد محمد', code: '5009', car: 'س ن ر 8830', branchId: 'cairo', status: 'active', prep: { start: true, end: true }, incoming: { start: true, end: false }, inventory: { start: false, end: false } },
-    { id: 2, name: 'محمد إسماعيل', code: '5008', car: 'ص ل د 1234', branchId: 'tanta', status: 'done', prep: { start: true, end: true }, incoming: { start: true, end: true }, inventory: { start: true, end: true } },
-    { id: 3, name: 'عمر فتحي', code: '5007', car: 'ط م ن 5678', branchId: 'cairo', status: 'active', prep: { start: true, end: false }, incoming: { start: false, end: false } }
+    { 
+      id: 1, 
+      name: 'أحمد محمد', 
+      code: '5009', 
+      car: 'س ن ر 8830', 
+      branchId: 'cairo', 
+      status: 'active', 
+      prep: { start: true, end: true, time: '10:15 AM' }, 
+      incoming: { start: true, end: false, time: '10:45 AM' }, 
+      inventory: { start: false, end: false, time: null } 
+    },
+    { 
+      id: 2, 
+      name: 'محمد إسماعيل', 
+      code: '5008', 
+      car: 'ص ل د 1234', 
+      branchId: 'tanta', 
+      status: 'done', 
+      prep: { start: true, end: true, time: '09:00 AM' }, 
+      incoming: { start: true, end: true, time: '09:30 AM' }, 
+      inventory: { start: true, end: true, time: '10:00 AM' } 
+    }
   ]);
 
   const stages = [
@@ -37,9 +55,10 @@ export default function App() {
   ];
 
   const handleStartStage = (id, key) => {
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setMessengers(messengers.map(m => {
       if (m.id === id) {
-        return { ...m, [key]: { start: true, end: false } };
+        return { ...m, [key]: { start: true, end: false, time: currentTime } };
       }
       return m;
     }));
@@ -167,7 +186,7 @@ export default function App() {
                   onChange={(e) => setSelectedBranch(e.target.value)}
                   className="bg-[#0d1117] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                 >
-                  <option value="all">جميع الفروع (3)</option>
+                  <option value="all">جميع الفروع</option>
                   <option value="cairo">فرع القاهرة</option>
                   <option value="tanta">فرع طنطا</option>
                 </select>
@@ -203,15 +222,9 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-
-                    <div className="text-left">
-                      <span className={`text-xs px-3 py-1 rounded-full font-bold ${m.status === 'done' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                        {m.status === 'done' ? 'مكتمل' : 'جار العمل'}
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Stages Buttons Grid */}
+                  {/* Stages Buttons Grid with Timers */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
                     {stages.map(st => {
                       const stageInfo = m[st.key] || {};
@@ -220,10 +233,17 @@ export default function App() {
 
                       return (
                         <div key={st.key} className={`p-3 rounded-xl border ${isDone ? 'bg-emerald-500/5 border-emerald-500/20' : isRunning ? 'bg-blue-600/10 border-blue-500/30' : 'bg-[#0d1117] border-slate-800'}`}>
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-bold text-slate-300">{st.label}</span>
                             <div className={`w-2 h-2 rounded-full ${isDone ? 'bg-emerald-500' : isRunning ? 'bg-blue-500 animate-ping' : 'bg-slate-600'}`}></div>
                           </div>
+
+                          {stageInfo.time && (
+                            <div className="flex items-center gap-1 text-[11px] text-blue-400 mb-2 font-mono">
+                              <Clock size={11} />
+                              <span>{stageInfo.time}</span>
+                            </div>
+                          )}
 
                           <div className="flex gap-1.5 mt-2">
                             {isDone ? (
@@ -264,17 +284,14 @@ export default function App() {
             <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
               <h3 className="text-slate-400 text-sm font-medium">إجمالي المندوبين النشطين</h3>
               <p className="text-3xl font-black text-white mt-2">11 مندوب</p>
-              <span className="text-xs text-emerald-400 mt-2 inline-block">↑ 12% عن أمس</span>
             </div>
             <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
               <h3 className="text-slate-400 text-sm font-medium">متوسط وقت الدورة</h3>
               <p className="text-3xl font-black text-blue-400 mt-2">22 دقيقة</p>
-              <span className="text-xs text-slate-400 mt-2 inline-block">أداء ممتاز</span>
             </div>
             <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
               <h3 className="text-slate-400 text-sm font-medium">المهام المكتملة اليوم</h3>
               <p className="text-3xl font-black text-emerald-400 mt-2">48 شحنة</p>
-              <span className="text-xs text-emerald-400 mt-2 inline-block">تم تسليمها بالكامل</span>
             </div>
           </div>
         )}
@@ -287,12 +304,10 @@ export default function App() {
               <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
                 <h4 className="font-bold text-blue-400">فرع القاهرة الرئيسي</h4>
                 <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 3 / 5</p>
-                <p className="text-xs text-slate-400">الكاشير: 1 / 3</p>
               </div>
               <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
                 <h4 className="font-bold text-blue-400">فرع طنطا</h4>
                 <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 2 / 4</p>
-                <p className="text-xs text-slate-400">الكاشير: 2 / 2</p>
               </div>
             </div>
           </div>
@@ -302,12 +317,11 @@ export default function App() {
         {activeTab === 'analytics' && (
           <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
             <h3 className="text-lg font-bold text-white">التقارير البيانية والملفات</h3>
-            <p className="text-sm text-slate-400">تصدير التقارير المفصلة بصيغ متوافقة مع الإدارة:</p>
             <div className="flex gap-4">
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
                 <Download size={18} /> تصدير إلى Excel
               </button>
-              <button className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-rose-600/20">
+              <button className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
                 <Download size={18} /> تصدير إلى PDF
               </button>
             </div>
