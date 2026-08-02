@@ -1,332 +1,173 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
-  Activity, 
-  Building2, 
-  Users, 
-  FileText, 
-  LogOut, 
-  Plus, 
-  Search, 
-  Clock, 
-  Car, 
-  MapPin, 
-  BarChart3, 
-  Download 
+  Package, Truck, CheckCircle2, AlertCircle, Clock, 
+  Search, Plus, Filter, BarChart2, ShieldAlert, ArrowRight,
+  RefreshCw, Layers, Calendar, User, FileText, Settings, Play
 } from 'lucide-react';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [activeTab, setActiveTab] = useState('workflow');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('all');
-
-  const [messengers, setMessengers] = useState([
-    { 
-      id: 1, 
-      name: 'أحمد محمد', 
-      code: '5009', 
-      car: 'س ن ر 8830', 
-      branchId: 'cairo', 
-      status: 'active', 
-      prep: { start: true, end: true, time: '10:15 AM' }, 
-      incoming: { start: true, end: false, time: '10:45 AM' }, 
-      inventory: { start: false, end: false, time: null } 
-    },
-    { 
-      id: 2, 
-      name: 'محمد إسماعيل', 
-      code: '5008', 
-      car: 'ص ل د 1234', 
-      branchId: 'tanta', 
-      status: 'done', 
-      prep: { start: true, end: true, time: '09:00 AM' }, 
-      incoming: { start: true, end: true, time: '09:30 AM' }, 
-      inventory: { start: true, end: true, time: '10:00 AM' } 
-    }
-  ]);
-
-  const stages = [
-    { key: 'prep', label: 'التحضير' },
-    { key: 'incoming', label: 'الوصول' },
-    { key: 'inventory', label: 'الجرد' },
-    { key: 'loading', label: 'التحميل' },
-    { key: 'cashier', label: 'الكاشير' }
-  ];
-
-  const handleStartStage = (id, key) => {
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setMessengers(messengers.map(m => {
-      if (m.id === id) {
-        return { ...m, [key]: { start: true, end: false, time: currentTime } };
-      }
-      return m;
-    }));
-  };
-
-  const handleEndStage = (id, key) => {
-    setMessengers(messengers.map(m => {
-      if (m.id === id) {
-        const stageData = m[key] || {};
-        return { ...m, [key]: { ...stageData, end: true } };
-      }
-      return m;
-    }));
-  };
-
-  const filteredMessengers = messengers.filter(m => {
-    const matchesSearch = m.name.includes(searchQuery) || m.code.includes(searchQuery) || m.car.includes(searchQuery);
-    const matchesBranch = selectedBranch === 'all' || m.branchId === selectedBranch;
-    return matchesSearch && matchesBranch;
+  
+  // العدادات والبيانات
+  const [metrics, setMetrics] = useState({
+    totalInbound: 1420,
+    processing: 385,
+    outbound: 890,
+    delayed: 45
   });
 
+  const [shipments, setShipments] = useState([
+    { id: '#5009', client: 'شركة النور للتجارة', destination: 'القاهرة - المقطم', status: 'جاري التجهيز', progress: 65, time: '10:15 AM' },
+    { id: '#8830', client: 'مؤسسة الأمل للصناعة', destination: 'الإسكندرية - سموحة', status: 'تم الاستلام', progress: 100, time: '09:30 AM' },
+    { id: '#9102', client: 'مخازن الدلتا الحديثة', destination: 'طنطا - الاستاد', status: 'قيد الشحن', progress: 40, time: '08:45 AM' },
+    { id: '#3341', client: 'شركة الفراعنة للاستيراد', destination: 'الجيزة - الهرم', status: 'متأخر', progress: 20, time: 'أمس' },
+  ]);
+
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-100 flex flex-col md:flex-row font-sans dir-rtl">
-      
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-[#161b22] border-l border-slate-800 p-4 flex flex-col justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg">
-              TB
-            </div>
-            <div>
-              <h1 className="font-extrabold text-lg tracking-wide">TBOS System</h1>
-              <p className="text-xs text-slate-400">إدارة اللوجستيات والمخازن</p>
-            </div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col" dir="rtl">
+      {/* شريط التنقل العلوي */}
+      <header className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2.5 rounded-xl shadow-md shadow-blue-500/20">
+            <Layers className="w-6 h-6 text-white" />
           </div>
-
-          <nav className="space-y-1.5">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-            >
-              <LayoutDashboard size={20} />
-              لوحة التحكم
-            </button>
-
-            <button
-              onClick={() => setActiveTab('workflow')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'workflow' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-            >
-              <Activity size={20} />
-              سير العمل المباشر
-            </button>
-
-            <button
-              onClick={() => setActiveTab('branches')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'branches' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-            >
-              <Building2 size={20} />
-              الفروع
-            </button>
-
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-            >
-              <BarChart3 size={20} />
-              التقارير الذكية
-            </button>
-          </nav>
+          <div>
+            <h1 className="text-xl font-bold tracking-wide text-white">TBOS System</h1>
+            <p className="text-xs text-slate-400">إدارة حركة المستودعات واللوجستيات</p>
+          </div>
         </div>
 
-        <button
-          onClick={() => setIsLoggedIn(false)}
-          className="mt-6 flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-rose-400 hover:bg-rose-500/10 transition-all border border-rose-500/20"
-        >
-          <LogOut size={18} />
-          تسجيل الخروج
-        </button>
-      </aside>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="بحث برقم الشحنة أو العميل..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-slate-950 border border-slate-700 rounded-lg pr-9 pl-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 w-64 transition-all"
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            <User className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-medium text-slate-300">مسؤول النظام</span>
+          </div>
+        </div>
+      </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-[#0d1117]">
+      {/* المحتوى الرئيسي */}
+      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
         
-        {/* Header Title */}
-        <header className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-          <div>
-            <h2 className="text-2xl font-black text-white">
-              {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
-              {activeTab === 'workflow' && 'خط سير العمل المباشر للمناديب'}
-              {activeTab === 'branches' && 'إدارة الفروع والسعات'}
-              {activeTab === 'analytics' && 'التقارير الذكية والتحليلات'}
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">متابعة دقيقة لحظية لحركة الشحنات وتجهيز المناديب</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              متصل بقاعدة البيانات
-            </span>
-          </div>
-        </header>
-
-        {/* Workflow & Messengers Tab */}
-        {activeTab === 'workflow' && (
-          <div className="space-y-6">
-            
-            {/* Search & Filters Bar */}
-            <div className="flex flex-col md:flex-row items-center gap-4 bg-[#161b22] p-4 rounded-2xl border border-slate-800">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute right-3.5 top-3.5 text-slate-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="ابحث باسم المندوب، أو الكود، أو السيارة..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#0d1117] border border-slate-800 rounded-xl px-4 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <select
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="bg-[#0d1117] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                >
-                  <option value="all">جميع الفروع</option>
-                  <option value="cairo">فرع القاهرة</option>
-                  <option value="tanta">فرع طنطا</option>
-                </select>
-
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-600/20 shrink-0">
-                  <Plus size={16} />
-                  إضافة مندوب
-                </button>
-              </div>
+        {/* بطاقات الإحصائيات والعدادات */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 font-medium">إجمالي الوارد</p>
+              <h3 className="text-2xl font-bold text-white mt-1">{metrics.totalInbound}</h3>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full mt-2 inline-block">+12% عن أمس</span>
             </div>
+            <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+              <Package className="w-6 h-6 text-blue-400" />
+            </div>
+          </div>
 
-            {/* Messengers List / Cards */}
-            <div className="space-y-4">
-              {filteredMessengers.map(m => (
-                <div key={m.id} className="bg-[#161b22] border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
-                  
-                  {/* Messenger Header Info */}
-                  <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-800/80">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-lg shadow-md">
-                        {m.name[0]}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 font-medium">تحت المعالجة والتجهيز</p>
+              <h3 className="text-2xl font-bold text-white mt-1">{metrics.processing}</h3>
+              <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full mt-2 inline-block">تحديث مستمر</span>
+            </div>
+            <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+              <Clock className="w-6 h-6 text-amber-400" />
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 font-medium">الصادر والمنتهى</p>
+              <h3 className="text-2xl font-bold text-white mt-1">{metrics.outbound}</h3>
+              <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full mt-2 inline-block">جاهز للتسليم</span>
+            </div>
+            <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+              <Truck className="w-6 h-6 text-emerald-400" />
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 font-medium">الشحنات المتأخرة</p>
+              <h3 className="text-2xl font-bold text-rose-400 mt-1">{metrics.delayed}</h3>
+              <span className="text-[10px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full mt-2 inline-block">تتطلب تدخل</span>
+            </div>
+            <div className="bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
+              <ShieldAlert className="w-6 h-6 text-rose-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* قسم جدول الشحنات وسير العمل */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-white">حركة الشحنات الحية</h2>
+              <p className="text-xs text-slate-400 mt-0.5">متابعة دقيقة لكل المراحل والخطوات اللوجستية</p>
+            </div>
+            <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span>شحنة جديدة</span>
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-950/50 text-slate-400 text-xs border-b border-slate-800">
+                  <th className="py-3 px-5 font-semibold">رقم الشحنة</th>
+                  <th className="py-3 px-5 font-semibold">العميل</th>
+                  <th className="py-3 px-5 font-semibold">وجهة التسليم</th>
+                  <th className="py-3 px-5 font-semibold">الحالة</th>
+                  <th className="py-3 px-5 font-semibold">معدل الإنجاز</th>
+                  <th className="py-3 px-5 font-semibold">الوقت</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-sm">
+                {shipments.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-4 px-5 font-mono font-medium text-blue-400">{item.id}</td>
+                    <td className="py-4 px-5 text-slate-200">{item.client}</td>
+                    <td className="py-4 px-5 text-slate-400">{item.destination}</td>
+                    <td className="py-4 px-5">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium inline-block ${
+                        item.status === 'تم الاستلام' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                        item.status === 'جاري التجهيز' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                        item.status === 'قيد الشحن' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-5 w-48">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${
+                              item.progress === 100 ? 'bg-emerald-500' : 
+                              item.progress > 50 ? 'bg-blue-500' : 'bg-amber-500'
+                            }`} 
+                            style={{ width: `${item.progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-slate-400 font-mono">{item.progress}%</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-base text-white">{m.name}</h3>
-                          <span className="text-xs bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-slate-300">
-                            #{m.code}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
-                          <span className="flex items-center gap-1"><Car size={13} /> {m.car}</span>
-                          <span className="flex items-center gap-1"><MapPin size={13} /> {m.branchId === 'cairo' ? 'فرع القاهرة' : 'فرع طنطا'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stages Buttons Grid with Timers */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
-                    {stages.map(st => {
-                      const stageInfo = m[st.key] || {};
-                      const isRunning = stageInfo.start && !stageInfo.end;
-                      const isDone = stageInfo.end;
-
-                      return (
-                        <div key={st.key} className={`p-3 rounded-xl border ${isDone ? 'bg-emerald-500/5 border-emerald-500/20' : isRunning ? 'bg-blue-600/10 border-blue-500/30' : 'bg-[#0d1117] border-slate-800'}`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-slate-300">{st.label}</span>
-                            <div className={`w-2 h-2 rounded-full ${isDone ? 'bg-emerald-500' : isRunning ? 'bg-blue-500 animate-ping' : 'bg-slate-600'}`}></div>
-                          </div>
-
-                          {stageInfo.time && (
-                            <div className="flex items-center gap-1 text-[11px] text-blue-400 mb-2 font-mono">
-                              <Clock size={11} />
-                              <span>{stageInfo.time}</span>
-                            </div>
-                          )}
-
-                          <div className="flex gap-1.5 mt-2">
-                            {isDone ? (
-                              <span className="w-full text-center text-xs text-emerald-400 py-1 rounded-lg bg-emerald-500/10 font-bold">
-                                تم ✓
-                              </span>
-                            ) : isRunning ? (
-                              <button
-                                onClick={() => handleEndStage(m.id, st.key)}
-                                className="w-full text-xs bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg font-bold transition-all shadow-sm"
-                              >
-                                إنهاء
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleStartStage(m.id, st.key)}
-                                className="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg font-bold transition-all shadow-sm"
-                              >
-                                بدء
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
+                    </td>
+                    <td className="py-4 px-5 text-xs text-slate-400 font-mono">{item.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
-              <h3 className="text-slate-400 text-sm font-medium">إجمالي المندوبين النشطين</h3>
-              <p className="text-3xl font-black text-white mt-2">11 مندوب</p>
-            </div>
-            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
-              <h3 className="text-slate-400 text-sm font-medium">متوسط وقت الدورة</h3>
-              <p className="text-3xl font-black text-blue-400 mt-2">22 دقيقة</p>
-            </div>
-            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
-              <h3 className="text-slate-400 text-sm font-medium">المهام المكتملة اليوم</h3>
-              <p className="text-3xl font-black text-emerald-400 mt-2">48 شحنة</p>
-            </div>
-          </div>
-        )}
-
-        {/* Branches Tab */}
-        {activeTab === 'branches' && (
-          <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4">إدارة الفروع والسعات المتاحة</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
-                <h4 className="font-bold text-blue-400">فرع القاهرة الرئيسي</h4>
-                <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 3 / 5</p>
-              </div>
-              <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
-                <h4 className="font-bold text-blue-400">فرع طنطا</h4>
-                <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 2 / 4</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-white">التقارير البيانية والملفات</h3>
-            <div className="flex gap-4">
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
-                <Download size={18} /> تصدير إلى Excel
-              </button>
-              <button className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
-                <Download size={18} /> تصدير إلى PDF
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>
