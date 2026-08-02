@@ -1,321 +1,320 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Package, Users, Building2, Clock, CheckCircle, 
-  BarChart3, FileText, Search, LogOut, Play, Square, 
-  ArrowRight, Download, Plus, Trash2, Shield
+  LayoutDashboard, 
+  Activity, 
+  Building2, 
+  Users, 
+  FileText, 
+  LogOut, 
+  Plus, 
+  Search, 
+  CheckCircle2, 
+  Clock, 
+  Car, 
+  MapPin, 
+  BarChart3, 
+  Download 
 } from 'lucide-react';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [activeTab, setActiveTab] = useState('workflow');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // بيانات تجريبية للنظام
-  const [branches, setBranches] = useState([
-    { id: 1, name: 'فرع القاهرة الرئيسي', code: 'CAI-01' },
-    { id: 2, name: 'فرع الإسكندرية', code: 'ALX-02' }
-  ]);
+  const [selectedBranch, setSelectedBranch] = useState('all');
 
   const [messengers, setMessengers] = useState([
-    { id: 1, name: 'أحمد محمد', phone: '01012345678', branch: 'فرع القاهرة الرئيسي' },
-    { id: 2, name: 'محمود حسن', phone: '01198765432', branch: 'فرع الإسكندرية' }
+    { id: 1, name: 'أحمد محمد', code: '5009', car: 'س ن ر 8830', branchId: 'cairo', status: 'active', prep: { start: true, end: true }, incoming: { start: true, end: false }, inventory: { start: false, end: false } },
+    { id: 2, name: 'محمد إسماعيل', code: '5008', car: 'ص ل د 1234', branchId: 'tanta', status: 'done', prep: { start: true, end: true }, incoming: { start: true, end: true }, inventory: { start: true, end: true } },
+    { id: 3, name: 'عمر فتحي', code: '5007', car: 'ط م ن 5678', branchId: 'cairo', status: 'active', prep: { start: true, end: false }, incoming: { start: false, end: false } }
   ]);
 
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      code: 'TRK-901', 
-      messenger: 'أحمد محمد', 
-      branch: 'فرع القاهرة الرئيسي', 
-      stage: 'الارد', 
-      status: 'جار العمل', 
-      timer: 120,
-      history: [{ stage: 'الوارد', time: '10:00 AM' }] 
-    },
-    { 
-      id: 2, 
-      code: 'TRK-902', 
-      messenger: 'محمود حسن', 
-      branch: 'فرع الإسكندرية', 
-      stage: 'التحضير', 
-      status: 'متوقف', 
-      timer: 300,
-      history: [{ stage: 'الوارد', time: '11:15 AM' }] 
-    }
-  ]);
+  const stages = [
+    { key: 'prep', label: 'التحضير' },
+    { key: 'incoming', label: 'الوصول' },
+    { key: 'inventory', label: 'الجرد' },
+    { key: 'loading', label: 'التحميل' },
+    { key: 'cashier', label: 'الكاشير' }
+  ];
 
-  const stages = ['الوارد', 'التحضير', 'الجرد', 'التحميل', 'الكاشير', 'انتهى'];
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (username && password) {
-      setIsLoggedIn(true);
-    }
+  const handleStartStage = (id, key) => {
+    setMessengers(messengers.map(m => {
+      if (m.id === id) {
+        return { ...m, [key]: { start: true, end: false } };
+      }
+      return m;
+    }));
   };
 
+  const handleEndStage = (id, key) => {
+    setMessengers(messengers.map(m => {
+      if (m.id === id) {
+        const stageData = m[key] || {};
+        return { ...m, [key]: { ...stageData, end: true } };
+      }
+      return m;
+    }));
+  };
+
+  const filteredMessengers = messengers.filter(m => {
+    const matchesSearch = m.name.includes(searchQuery) || m.code.includes(searchQuery) || m.car.includes(searchQuery);
+    const matchesBranch = selectedBranch === 'all' || m.branchId === selectedBranch;
+    return matchesSearch && matchesBranch;
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-right" dir="rtl">
-      {!isLoggedIn ? (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-            <div className="text-center mb-8">
-              <div className="bg-blue-600 text-white p-4 rounded-xl inline-block mb-3 shadow-lg">
-                <Package size={36} />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-800">نظام تتبع الرسائل (MTS)</h1>
-              <p className="text-gray-500 text-sm mt-1">تسجيل الدخول لإدارة العمليات واللوجستيات</p>
+    <div className="min-h-screen bg-[#0d1117] text-slate-100 flex flex-col md:flex-row font-sans dir-rtl">
+      
+      {/* Sidebar Navigation */}
+      <aside className="w-full md:w-64 bg-[#161b22] border-l border-slate-800 p-4 flex flex-col justify-between shrink-0">
+        <div>
+          <div className="flex items-center gap-3 mb-8 px-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg">
+              TB
             </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
-                <input 
-                  type="text" 
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="أدخل اسم المستخدم"
-                  required 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="أدخل كلمة المرور"
-                  required 
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-200">
-                تسجيل الدخول
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-1 flex-col md:flex-row">
-          {/* الشريط الجانبي */}
-          <aside className="w-full md:w-64 bg-slate-900 text-white p-5 flex flex-col justify-between shadow-xl">
             <div>
-              <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-800">
-                <Package className="text-blue-400" size={30} />
-                <span className="text-xl font-bold tracking-wide">MTS System</span>
-              </div>
-              <nav className="space-y-2">
-                <button 
-                  onClick={() => setActiveTab('dashboard')} 
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`}>
-                  <BarChart3 size={20} /> لوحة التحكم
-                </button>
-                <button 
-                  onClick={() => setActiveTab('workflow')} 
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'workflow' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`}>
-                  <Clock size={20} /> سير العمل
-                </button>
-                <button 
-                  onClick={() => setActiveTab('branches')} 
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'branches' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`}>
-                  <Building2 size={20} /> الفروع
-                </button>
-                <button 
-                  onClick={() => setActiveTab('messengers')} 
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'messengers' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`}>
-                  <Users size={20} /> المناديب
-                </button>
-                <button 
-                  onClick={() => setActiveTab('analytics')} 
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`}>
-                  <FileText size={20} /> التحليلات والتقارير
-                </button>
-              </nav>
+              <h1 className="font-extrabold text-lg tracking-wide">TBOS System</h1>
+              <p className="text-xs text-slate-400">إدارة اللوجستيات والمخازن</p>
             </div>
-            <button 
-              onClick={() => setIsLoggedIn(false)} 
-              className="mt-6 flex items-center justify-center gap-2 w-full bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white py-3 rounded-xl transition font-medium">
-              <LogOut size={18} /> تسجيل الخروج
+          </div>
+
+          <nav className="space-y-1.5">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <LayoutDashboard size={20} />
+              لوحة التحكم
             </button>
-          </aside>
 
-          {/* محتوى الصفحة الرئيسية */}
-          <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
-                {activeTab === 'workflow' && 'مراحل سير العمل واللوجستيات'}
-                {activeTab === 'branches' && 'إدارة الفروع'}
-                {activeTab === 'messengers' && 'إدارة المناديب'}
-                {activeTab === 'analytics' && 'تقارير التحليلات والتصدير'}
-              </h2>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <div className="relative flex-1 md:w-64">
-                  <Search className="absolute right-3 top-3 text-gray-400" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="بحث بالكود أو الاسم..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pr-10 pl-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-              </div>
-            </header>
+            <button
+              onClick={() => setActiveTab('workflow')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'workflow' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <Activity size={20} />
+              سير العمل المباشر
+            </button>
 
-            {/* محتوى لوحة التحكم */}
-            {activeTab === 'dashboard' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">إجمالي الشحنات</p>
-                      <h3 className="text-3xl font-bold text-gray-800 mt-1">{tasks.length}</h3>
-                    </div>
-                    <div className="bg-blue-50 text-blue-600 p-4 rounded-xl"><Package size={24} /></div>
-                  </div>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">المناديب النشطون</p>
-                      <h3 className="text-3xl font-bold text-gray-800 mt-1">{messengers.length}</h3>
-                    </div>
-                    <div className="bg-green-50 text-green-600 p-4 rounded-xl"><Users size={24} /></div>
-                  </div>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">الفروع المتاحة</p>
-                      <h3 className="text-3xl font-bold text-gray-800 mt-1">{branches.length}</h3>
-                    </div>
-                    <div className="bg-purple-50 text-purple-600 p-4 rounded-xl"><Building2 size={24} /></div>
-                  </div>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 text-sm">حالة النظام</p>
-                      <h3 className="text-lg font-bold text-emerald-600 mt-1 flex items-center gap-1">
-                        <CheckCircle size={18} /> متصل بـ Supabase
-                      </h3>
-                    </div>
-                    <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl"><Shield size={24} /></div>
-                  </div>
-                </div>
+            <button
+              onClick={() => setActiveTab('branches')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'branches' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <Building2 size={20} />
+              الفروع
+            </button>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">العمليات الأخيرة الحالية</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-right">
-                      <thead>
-                        <tr className="border-b border-gray-100 text-gray-400 text-sm">
-                          <th className="pb-3">كود الشحنة</th>
-                          <th className="pb-3">المندوب</th>
-                          <th className="pb-3">الفرع</th>
-                          <th className="pb-3">المرحلة الحالية</th>
-                          <th className="pb-3">الحالة</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50 text-sm">
-                        {tasks.map(t => (
-                          <tr key={t.id} className="hover:bg-gray-50">
-                            <td className="py-3 font-semibold text-blue-600">{t.code}</td>
-                            <td className="py-3 text-gray-700">{t.messenger}</td>
-                            <td className="py-3 text-gray-700">{t.branch}</td>
-                            <td className="py-3"><span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">{t.stage}</span></td>
-                            <td className="py-3"><span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-medium">{t.status}</span></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* صفحة سير العمل */}
-            {activeTab === 'workflow' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                  {stages.map((stg, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">مرحلة {idx + 1}</span>
-                        <h4 className="font-bold text-gray-800 mt-2 text-lg">{stg}</h4>
-                      </div>
-                      <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
-                        <button className="bg-emerald-50 text-emerald-600 p-2 rounded-lg hover:bg-emerald-100"><Play size={16} /></button>
-                        <button className="bg-rose-50 text-rose-600 p-2 rounded-lg hover:bg-rose-100"><Square size={16} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* صفحة الفروع */}
-            {activeTab === 'branches' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-800">قائمة الفروع المسجلة</h3>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700">
-                    <Plus size={16} /> إضافة فرع جديد
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {branches.map(b => (
-                    <div key={b.id} className="p-4 border border-gray-100 rounded-xl flex justify-between items-center bg-gray-50">
-                      <div>
-                        <h4 className="font-bold text-gray-800">{b.name}</h4>
-                        <p className="text-sm text-gray-500">الكود التعريفي: {b.code}</p>
-                      </div>
-                      <button className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={18} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* صفحة المناديب */}
-            {activeTab === 'messengers' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-800">قائمة المناديب</h3>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700">
-                    <Plus size={16} /> إضافة مندوب
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {messengers.map(m => (
-                    <div key={m.id} className="p-4 border border-gray-100 rounded-xl flex justify-between items-center bg-gray-50">
-                      <div>
-                        <h4 className="font-bold text-gray-800">{m.name}</h4>
-                        <p className="text-sm text-gray-500">الهاتف: {m.phone} | الفرع: {m.branch}</p>
-                      </div>
-                      <button className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={18} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* صفحة التحليلات والتقارير */}
-            {activeTab === 'analytics' && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <h3 className="text-lg font-bold text-gray-800">تصدير التقارير البيانية</h3>
-                <p className="text-gray-500 text-sm">يمكنك تصدير كافة بيانات شحنات نظام تتبع الرسائل بصيغ متوافقة مع الإدارة.</p>
-                <div className="flex gap-4">
-                  <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-medium flex items-center gap-2 shadow-sm">
-                    <Download size={18} /> تصدير إلى Excel
-                  </button>
-                  <button className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-3 rounded-xl font-medium flex items-center gap-2 shadow-sm">
-                    <Download size={18} /> تصدير إلى PDF
-                  </button>
-                </div>
-              </div>
-            )}
-          </main>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all ${activeTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <BarChart3 size={20} />
+              التقارير الذكية
+            </button>
+          </nav>
         </div>
-      )}
+
+        <button
+          onClick={() => setIsLoggedIn(false)}
+          className="mt-6 flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-rose-400 hover:bg-rose-500/10 transition-all border border-rose-500/20"
+        >
+          <LogOut size={18} />
+          تسجيل الخروج
+        </button>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-[#0d1117]">
+        
+        {/* Header Title */}
+        <header className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              {activeTab === 'dashboard' && 'لوحة التحكم الرئيسية'}
+              {activeTab === 'workflow' && 'خط سير العمل المباشر للمناديب'}
+              {activeTab === 'branches' && 'إدارة الفروع والسعات'}
+              {activeTab === 'analytics' && 'التقارير الذكية والتحليلات'}
+            </h2>
+            <p className="text-sm text-slate-400 mt-1">متابعة دقيقة لحظية لحركة الشحنات وتجهيز المناديب</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              متصل بقاعدة البيانات
+            </span>
+          </div>
+        </header>
+
+        {/* Workflow & Messengers Tab */}
+        {activeTab === 'workflow' && (
+          <div className="space-y-6">
+            
+            {/* Search & Filters Bar */}
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-[#161b22] p-4 rounded-2xl border border-slate-800">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute right-3.5 top-3.5 text-slate-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="ابحث باسم المندوب، أو الكود، أو السيارة..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#0d1117] border border-slate-800 rounded-xl px-4 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="bg-[#0d1117] border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="all">جميع الفروع (3)</option>
+                  <option value="cairo">فرع القاهرة</option>
+                  <option value="tanta">فرع طنطا</option>
+                </select>
+
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-600/20 shrink-0">
+                  <Plus size={16} />
+                  إضافة مندوب
+                </button>
+              </div>
+            </div>
+
+            {/* Messengers List / Cards */}
+            <div className="space-y-4">
+              {filteredMessengers.map(m => (
+                <div key={m.id} className="bg-[#161b22] border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
+                  
+                  {/* Messenger Header Info */}
+                  <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-800/80">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-lg shadow-md">
+                        {m.name[0]}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-base text-white">{m.name}</h3>
+                          <span className="text-xs bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-slate-300">
+                            #{m.code}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                          <span className="flex items-center gap-1"><Car size={13} /> {m.car}</span>
+                          <span className="flex items-center gap-1"><MapPin size={13} /> {m.branchId === 'cairo' ? 'فرع القاهرة' : 'فرع طنطا'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-left">
+                      <span className={`text-xs px-3 py-1 rounded-full font-bold ${m.status === 'done' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                        {m.status === 'done' ? 'مكتمل' : 'جار العمل'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stages Buttons Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+                    {stages.map(st => {
+                      const stageInfo = m[st.key] || {};
+                      const isRunning = stageInfo.start && !stageInfo.end;
+                      const isDone = stageInfo.end;
+
+                      return (
+                        <div key={st.key} className={`p-3 rounded-xl border ${isDone ? 'bg-emerald-500/5 border-emerald-500/20' : isRunning ? 'bg-blue-600/10 border-blue-500/30' : 'bg-[#0d1117] border-slate-800'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-slate-300">{st.label}</span>
+                            <div className={`w-2 h-2 rounded-full ${isDone ? 'bg-emerald-500' : isRunning ? 'bg-blue-500 animate-ping' : 'bg-slate-600'}`}></div>
+                          </div>
+
+                          <div className="flex gap-1.5 mt-2">
+                            {isDone ? (
+                              <span className="w-full text-center text-xs text-emerald-400 py-1 rounded-lg bg-emerald-500/10 font-bold">
+                                تم ✓
+                              </span>
+                            ) : isRunning ? (
+                              <button
+                                onClick={() => handleEndStage(m.id, st.key)}
+                                className="w-full text-xs bg-rose-600 hover:bg-rose-700 text-white py-1.5 rounded-lg font-bold transition-all shadow-sm"
+                              >
+                                إنهاء
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleStartStage(m.id, st.key)}
+                                className="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg font-bold transition-all shadow-sm"
+                              >
+                                بدء
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
+              <h3 className="text-slate-400 text-sm font-medium">إجمالي المندوبين النشطين</h3>
+              <p className="text-3xl font-black text-white mt-2">11 مندوب</p>
+              <span className="text-xs text-emerald-400 mt-2 inline-block">↑ 12% عن أمس</span>
+            </div>
+            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
+              <h3 className="text-slate-400 text-sm font-medium">متوسط وقت الدورة</h3>
+              <p className="text-3xl font-black text-blue-400 mt-2">22 دقيقة</p>
+              <span className="text-xs text-slate-400 mt-2 inline-block">أداء ممتاز</span>
+            </div>
+            <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
+              <h3 className="text-slate-400 text-sm font-medium">المهام المكتملة اليوم</h3>
+              <p className="text-3xl font-black text-emerald-400 mt-2">48 شحنة</p>
+              <span className="text-xs text-emerald-400 mt-2 inline-block">تم تسليمها بالكامل</span>
+            </div>
+          </div>
+        )}
+
+        {/* Branches Tab */}
+        {activeTab === 'branches' && (
+          <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl">
+            <h3 className="text-lg font-bold text-white mb-4">إدارة الفروع والسعات المتاحة</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
+                <h4 className="font-bold text-blue-400">فرع القاهرة الرئيسي</h4>
+                <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 3 / 5</p>
+                <p className="text-xs text-slate-400">الكاشير: 1 / 3</p>
+              </div>
+              <div className="p-4 rounded-xl bg-[#0d1117] border border-slate-800">
+                <h4 className="font-bold text-blue-400">فرع طنطا</h4>
+                <p className="text-xs text-slate-400 mt-1">الأرصفة المتاحة: 2 / 4</p>
+                <p className="text-xs text-slate-400">الكاشير: 2 / 2</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="bg-[#161b22] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+            <h3 className="text-lg font-bold text-white">التقارير البيانية والملفات</h3>
+            <p className="text-sm text-slate-400">تصدير التقارير المفصلة بصيغ متوافقة مع الإدارة:</p>
+            <div className="flex gap-4">
+              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                <Download size={18} /> تصدير إلى Excel
+              </button>
+              <button className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-rose-600/20">
+                <Download size={18} /> تصدير إلى PDF
+              </button>
+            </div>
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }
